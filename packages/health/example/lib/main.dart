@@ -44,11 +44,37 @@ class HealthAppState extends State<HealthApp> {
   List<RecordingMethod> recordingMethodsToFilter = [];
 
   // All types available depending on platform (iOS ot Android).
-  List<HealthDataType> get types => (Platform.isAndroid)
-      ? dataTypesAndroid
-      : (Platform.isIOS)
-          ? dataTypesIOS
-          : [];
+  // List<HealthDataType> get types => (Platform.isAndroid)
+  //     ? dataTypesAndroid
+  //     : (Platform.isIOS)
+  //         ? dataTypesIOS
+  //         : [];
+
+  List<HealthDataType> get types {
+    if (Platform.isAndroid) {
+      return [
+        HealthDataType.STEPS,
+        HealthDataType.HEART_RATE,
+        HealthDataType.SLEEP_ASLEEP,
+        HealthDataType.SLEEP_AWAKE_IN_BED,
+        HealthDataType.SLEEP_DEEP,
+        HealthDataType.WATER,
+        HealthDataType.ACTIVE_ENERGY_BURNED,
+      ];
+    } else if (Platform.isIOS) {
+      return [
+        HealthDataType.STEPS,
+        HealthDataType.HEART_RATE,
+        HealthDataType.SLEEP_ASLEEP,
+        HealthDataType.SLEEP_IN_BED,
+        HealthDataType.SLEEP_DEEP,
+        HealthDataType.WATER,
+        HealthDataType.ACTIVE_ENERGY_BURNED,
+      ];
+    } else {
+      return [];
+    }
+  }
 
   // // Or specify specific types
   // static final types = [
@@ -125,13 +151,12 @@ class HealthAppState extends State<HealthApp> {
       try {
         authorized =
             await health.requestAuthorization(types, permissions: permissions);
-        
+
         // request access to read historic data
         await health.requestHealthDataHistoryAuthorization();
 
         // request access in background
         await health.requestHealthDataInBackgroundAuthorization();
-
       } catch (error) {
         debugPrint("Exception in authorize: $error");
       }
@@ -258,7 +283,8 @@ class HealthAppState extends State<HealthApp> {
         type: HealthDataType.BLOOD_GLUCOSE,
         startTime: earlier,
         endTime: now);
-    success &= await health.writeInsulinDelivery(5, InsulinDeliveryReason.BOLUS, earlier, now);
+    success &= await health.writeInsulinDelivery(
+        5, InsulinDeliveryReason.BOLUS, earlier, now);
     success &= await health.writeHealthData(
         value: 1.8,
         type: HealthDataType.WATER,
@@ -381,7 +407,6 @@ class HealthAppState extends State<HealthApp> {
       startTime: earlier,
       endTime: now,
     );
-
 
     if (Platform.isIOS) {
       success &= await health.writeHealthData(
@@ -555,8 +580,9 @@ class HealthAppState extends State<HealthApp> {
     healthDataResponse.sort((a, b) => b.dateTo.compareTo(a.dateTo));
 
     _healthDataList.clear();
-    _healthDataList.addAll(
-        (healthDataResponse.length < 100) ? healthDataResponse : healthDataResponse.sublist(0, 100));
+    _healthDataList.addAll((healthDataResponse.length < 100)
+        ? healthDataResponse
+        : healthDataResponse.sublist(0, 100));
 
     for (var data in _healthDataList) {
       debugPrint(toJsonString(data));
