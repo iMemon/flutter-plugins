@@ -220,12 +220,43 @@ class HealthAppState extends State<HealthApp> {
       debugPrint(toJsonString(data));
     }
 
+    // Helper function to check if a date is today
+    bool isTodayDataPoint(DateTime date) {
+      final now = DateTime.now();
+      return date.year == now.year &&
+          date.month == now.month &&
+          date.day == now.day;
+    }
+
     _totalCaloriesBurned = _healthDataList
-        .where((data) => data.type == HealthDataType.TOTAL_CALORIES_BURNED)
+        .where((data) =>
+            data.type == HealthDataType.TOTAL_CALORIES_BURNED &&
+            data.dateTo.isBefore(now) &&
+            isTodayDataPoint(data.dateFrom))
         .map((data) =>
             (data.value as NumericHealthValue).numericValue.toDouble())
-        .reduce((a, b) => a + b);
+        .fold(0.0,
+            (a, b) => a + b); // Use fold instead of reduce to handle empty list
+    debugPrint('Total calories burned: $_totalCaloriesBurned');
 
+    HealthDataPoint? lastEntry = _healthDataList
+        .where((data) =>
+            data.type == HealthDataType.TOTAL_CALORIES_BURNED &&
+            data.dateTo.isAfter(now) &&
+            isTodayDataPoint(data.dateFrom))
+        .firstOrNull;
+    if (lastEntry != null) {
+      // Calculate durations in milliseconds (most precise)
+      final totalDuration =
+          lastEntry.dateTo.difference(lastEntry.dateFrom).inMilliseconds;
+      final elapsedDuration = now.difference(lastEntry.dateFrom).inMilliseconds;
+
+      // Calculate percentage
+      final percentage = (elapsedDuration / totalDuration);
+      _totalCaloriesBurned +=
+          ((lastEntry.value as NumericHealthValue).numericValue.toDouble() *
+              percentage);
+    }
     debugPrint('Total calories burned: $_totalCaloriesBurned');
 
     // update the UI to display the results
@@ -842,7 +873,8 @@ class HealthAppState extends State<HealthApp> {
           );
         }
         return ListTile(
-          title: Text("${p.typeString}: ${p.value}"),
+          title: Text(
+              "${p.typeString}: ${p.value} (Total: $_totalCaloriesBurned)"),
           trailing: Text(p.unitString),
           subtitle: Text('${p.dateFrom} - ${p.dateTo}\n${p.recordingMethod}'),
         );
