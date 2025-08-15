@@ -39,6 +39,7 @@ enum AppState {
 
 class HealthAppState extends State<HealthApp> {
   List<HealthDataPoint> _healthDataList = [];
+  double _totalCaloriesBurned = 0.0;
   AppState _state = AppState.DATA_NOT_FETCHED;
   int _nofSteps = 0;
   List<RecordingMethod> recordingMethodsToFilter = [];
@@ -53,22 +54,22 @@ class HealthAppState extends State<HealthApp> {
   List<HealthDataType> get types {
     if (Platform.isAndroid) {
       return [
-        HealthDataType.STEPS,
-        HealthDataType.HEART_RATE,
-        HealthDataType.SLEEP_ASLEEP,
-        HealthDataType.SLEEP_AWAKE_IN_BED,
-        HealthDataType.SLEEP_DEEP,
-        HealthDataType.WATER,
-        HealthDataType.ACTIVE_ENERGY_BURNED,
+        // HealthDataType.STEPS,
+        // HealthDataType.HEART_RATE,
+        // HealthDataType.SLEEP_ASLEEP,
+        // HealthDataType.SLEEP_AWAKE_IN_BED,
+        // HealthDataType.SLEEP_DEEP,
+        // HealthDataType.WATER,
+        HealthDataType.TOTAL_CALORIES_BURNED,
       ];
     } else if (Platform.isIOS) {
       return [
-        HealthDataType.STEPS,
-        HealthDataType.HEART_RATE,
-        HealthDataType.SLEEP_ASLEEP,
-        HealthDataType.SLEEP_IN_BED,
-        HealthDataType.SLEEP_DEEP,
-        HealthDataType.WATER,
+        // HealthDataType.STEPS,
+        // HealthDataType.HEART_RATE,
+        // HealthDataType.SLEEP_ASLEEP,
+        // HealthDataType.SLEEP_IN_BED,
+        // HealthDataType.SLEEP_DEEP,
+        // HealthDataType.WATER,
         HealthDataType.ACTIVE_ENERGY_BURNED,
       ];
     } else {
@@ -218,6 +219,14 @@ class HealthAppState extends State<HealthApp> {
     for (var data in _healthDataList) {
       debugPrint(toJsonString(data));
     }
+
+    _totalCaloriesBurned = _healthDataList
+        .where((data) => data.type == HealthDataType.TOTAL_CALORIES_BURNED)
+        .map((data) =>
+            (data.value as NumericHealthValue).numericValue.toDouble())
+        .reduce((a, b) => a + b);
+
+    debugPrint('Total calories burned: $_totalCaloriesBurned');
 
     // update the UI to display the results
     setState(() {
